@@ -1,0 +1,7 @@
+[package]
+name = "murderous-onions"
+version = "0.1.0"
+authors = ["bwbw223"]
+
+[dependencies]
+image = "0.12.*"

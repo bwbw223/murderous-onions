@@ -1,28 +1,35 @@
 extern crate image;
+extern crate hsl;
 mod complex;
+
+use hsl::HSL;
+use complex::Complex;
 
 use std::fs::File;
 use std::path::Path;
-use complex::Complex;
-
-fn in_set(num: Complex) -> bool {
+fn hsl_tuple_as_array(slice: (u8, u8, u8)) -> [u8; 3] {
+    [slice.0, slice.1, slice.2]
+}
+fn in_set(num: Complex, max: u16) -> f64 {
     let mut tmp = num.clone();
-
-    for x in 0..110 {
+    let mut out = 0f64;
+    for x in 0..max {
         // Z' = Z * Z + C
         tmp = tmp.multiply(tmp).add(num);
+        if 2f64 < tmp.real.abs() && 2f64 < tmp.i.abs() {out = x as f64; break;}
     }
 
-    tmp.real * tmp.i < 0.4f64
+    if out == max as f64 - 1f64 {0f64} else {out / 100f64}
 }
 
 fn main() {
     let filename = "mandelbrot.png";
-    let magnification = 200f64;
+    let magnification = 1280f64;
     let panx = 2f64;
     let pany = 1.5f64;
-    let width = 600;
-    let height = 600;
+    let width = 3840;
+    let height = 3840;
+    let iterations = 100u16;
 
     let mut img: image::RgbImage = image::ImageBuffer::new(width, height);
 
@@ -31,10 +38,11 @@ fn main() {
             real: (x as f64 / magnification - panx),
             i: (y as f64 / magnification - pany)
         };
-        if in_set(now) {
-            *pixel = image::Rgb([255u8, 0u8, 0u8])
-        } else {
+        let inset = in_set(now, iterations);
+        if  inset == 0f64 {
             *pixel = image::Rgb([0u8, 0u8, 0u8])
+        } else {
+            *pixel = image::Rgb(hsl_tuple_as_array(HSL {h: 0f64, s: 1f64, l: inset}.to_rgb()))
         }
     }
 
